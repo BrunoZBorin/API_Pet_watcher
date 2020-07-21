@@ -18,19 +18,30 @@ class UserController extends Controller
         return response()->json($users, 200);
     }
 
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
     public function store(Request $request)
     {
-        try 
-        {
-            $user = User::create($request->all());
+        
+        
+            $address = \Correios::cep($request->zipcode);
+
+            $user = new User();
+            $user->fill($request->all());
+            $user->password = Hash::make($user->password);
+            if(!empty($address)) {
+                $user->address = $address['logradouro'];
+                $user->neighborhood = $address['bairro'];
+                $user->city = $address['cidade'];
+                $user->state = $address['uf'];
+            }
+            $user->save();
             return response()->json($user, 201);
-        }
-         catch (\Exception $e) {
-            return response()->json([
-                'title' => 'Erro',
-                'msg' => 'Erro interno do servidor'
-            ], 500);
-        }
+        
     }
 
     public function show($id)
